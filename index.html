@@ -142,54 +142,57 @@ function calcularTotal() {
     const fIng = new Date(document.getElementById('fIngreso').value);
     const fEgr = new Date(document.getElementById('fEgreso').value);
     const motivo = document.getElementById('motivo').value;
-    const domingos = parseInt(document.getElementById('domingos').value) || 0;
-    const feriados = parseInt(document.getElementById('feriados').value) || 0;
 
+    // 1. Salarios
     const salarioNormalDiario = (sueldoBase / 30) * (factorNocturno > 1 ? factorNocturno : 1);
-    const alicuotaUtil = (salarioNormalDiario * dUtil) / 360;
-    const alicuotaVac = (salarioNormalDiario * dVac) / 360;
-    const salarioIntegralDiario = salarioNormalDiario + alicuotaUtil + alicuotaVac;
+    const salarioIntegralDiario = salarioNormalDiario + ((salarioNormalDiario * dUtil) / 360) + ((salarioNormalDiario * dVac) / 360);
 
+    // 2. Tiempo exacto
     let diffMs = fEgr - fIng;
     let diasTotales = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     let anosCompletos = Math.floor(diasTotales / 365);
     let mesesFraccion = Math.floor((diasTotales % 365) / 30);
 
-    let diasParaCalculo = 0;
-    let notaTiempo = "";
+    // 3. Lógica Progresiva y Fraccionaria
+    let diasTotalesDerecho = 0;
+    let detalleCalculo = "";
 
-    if (mesesFraccion >= 6) {
-        diasParaCalculo = (anosCompletos + 1) * 30;
-        notaTiempo = `Fracción de ${mesesFraccion} meses reconocida como año completo (Art. 142 C).`;
-    } else {
-        diasParaCalculo = anosCompletos * 30;
-        notaTiempo = `Tiempo: ${anosCompletos} años y ${mesesFraccion} meses.`;
+    // Calculamos años cerrados primero
+    for (let i = 1; i <= anosCompletos; i++) {
+        let adicionales = (i > 1) ? Math.min((i - 1) * 2, 30) : 0;
+        diasTotalesDerecho += (60 + adicionales);
+        detalleCalculo += `Año ${i}: 60 + ${adicionales} días. `;
     }
 
-    const montoExtras = (domingos + feriados) * (salarioNormalDiario * 1.5);
-    const montoPrestaciones = diasParaCalculo * salarioIntegralDiario;
-    let montoIndem = (motivo === 'despido') ? montoPrestaciones : 0;
-    const totalFinal = montoPrestaciones + montoIndem + montoExtras;
+    // 4. Lógica de la Fracción Final
+    if (mesesFraccion >= 6) {
+        // Barrera superada: Se suma el año siguiente COMPLETO con sus adicionales
+        let proxAno = anosCompletos + 1;
+        let adicionalesProx = Math.min((proxAno - 1) * 2, 30);
+        diasTotalesDerecho += (60 + adicionalesProx);
+        detalleCalculo += `Fracción > 6 meses: Año ${proxAno} completo (${60 + adicionalesProx} días).`;
+    } else {
+        // Barrera NO superada: Se suman solo 5 días por cada mes
+        let diasPorMeses = mesesFraccion * 5;
+        diasTotalesDerecho += diasPorMeses;
+        detalleCalculo += `Fracción < 6 meses: ${mesesFraccion} meses x 5 días = ${diasPorMeses} días.`;
+    }
 
+    // 5. Totales
+    const montoPrestaciones = diasTotalesDerecho * salarioIntegralDiario;
+    let montoIndem = (motivo === 'despido') ? montoPrestaciones : 0;
+    const totalFinal = montoPrestaciones + montoIndem;
+
+    // 6. Mostrar Resultados
     document.getElementById('resultados').classList.remove('d-none');
     document.getElementById('btnPDF').classList.remove('d-none');
-    document.getElementById('outNormal').innerText = `$ ${salarioNormalDiario.toFixed(2)}`;
-    document.getElementById('outIntegral').innerText = `$ ${salarioIntegralDiario.toFixed(2)}`;
-    document.getElementById('outTiempo').innerText = `${anosCompletos} años, ${mesesFraccion} meses`;
-    document.getElementById('outDiasBase').innerText = `${diasParaCalculo} días`;
-    document.getElementById('notaSobreTiempo').innerText = notaTiempo;
-    document.getElementById('outMontoExtras').innerText = `$ ${montoExtras.toFixed(2)}`;
-    document.getElementById('outSubtotal').innerText = `$ ${montoPrestaciones.toFixed(2)}`;
     
-    if (montoIndem > 0) {
-        document.getElementById('areaIndem').classList.remove('d-none');
-        document.getElementById('outIndem').innerText = `$ ${montoIndem.toFixed(2)}`;
-    } else {
-        document.getElementById('areaIndem').classList.add('d-none');
-    }
+    document.getElementById('outTiempo').innerText = `${anosCompletos} años y ${mesesFraccion} meses`;
+    document.getElementById('outDiasBase').innerText = `${diasTotalesDerecho} días`;
+    document.getElementById('notaSobreTiempo').innerText = detalleCalculo;
+    document.getElementById('outSubtotal').innerText = `$ ${montoPrestaciones.toFixed(2)}`;
     document.getElementById('outTotal').innerText = `$ ${totalFinal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
 }
-
 function generarPDF() {
     const elemento = document.getElementById('contenido-pdf');
     const opt = {
