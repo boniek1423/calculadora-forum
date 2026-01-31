@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Laboral - Casos Forum</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #d32f2f; text-align: center; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9em; }
+        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; background: #d32f2f; color: white; border: none; padding: 15px; margin-top: 20px; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: bold; }
+        button:hover { background: #b71c1c; }
+        .result { margin-top: 20px; padding: 15px; background: #e8f5e9; border-left: 5px solid #2e7d32; display: none; }
+        .nota { font-size: 0.8em; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Calculadora Laboral (LOTTT)</h2>
+    <p style="text-align: center; font-size: 0.8em;">Especial para trabajadores con bonos en USD</p>
+    
+    <label>Fecha de Ingreso:</label>
+    <input type="date" id="ingreso" value="2023-09-06">
+    
+    <label>Fecha de Egreso:</label>
+    <input type="date" id="egreso" value="2026-01-30">
+    
+    <label>Sueldo Base Mensual (Bs.):</label>
+    <input type="number" id="sueldoBs" value="291.91">
+    
+    <label>Bonos mensuales (USD) - Sin Cestaticket:</label>
+    <input type="number" id="bonoUsd" value="150">
+
+    <button onclick="calcular()">CALCULAR PRESTACIONES</button>
+
+    <div id="resultado" class="result">
+        <strong>Resultado Estimado:</strong><br>
+        <p id="detalle"></p>
+        <small>*Cálculo basado en 30 días por año (Retroactividad Art. 142 LOTTT).*</small>
+    </div>
+    
+    <p class="nota">Nota: Esta herramienta es referencial. Los montos en USD se calculan como salario normal según jurisprudencia reciente de 2025.</p>
+</div>
+
+<script>
+function calcular() {
+    const f1 = new Date(document.getElementById('ingreso').value);
+    const f2 = new Date(document.getElementById('egreso').value);
+    const sueldoBs = parseFloat(document.getElementById('sueldoBs').value);
+    const bonoUsd = parseFloat(document.getElementById('bonoUsd').value);
+
+    // 1. Calcular Antigüedad en meses
+    let meses = (f2.getFullYear() - f1.getFullYear()) * 12 + (f2.getMonth() - f1.getMonth());
+    let añosParaPrestaciones = Math.ceil(meses / 12);
+    if (meses % 12 >= 6) { añosParaPrestaciones = Math.floor(meses/12) + 1; } 
+    else { añosParaPrestaciones = Math.floor(meses/12); }
+
+    // Si tiene más de 6 meses en el último año, se cuenta como año completo (Art. 142)
+    // Para tu caso exacto (Sep 2023 a Enero 2026), son 2 años y 4 meses. 
+    // La ley otorga 30 días por año.
+    
+    const diasDerecho = añosParaPrestaciones * 30;
+    
+    // 2. Salario Integral Diario Estimado (SID)
+    // Sumamos Bs y USD (convertido simplificado para el ejemplo)
+    const salarioMensualTotal = bonoUsd + (sueldoBs / 40); // 40 es una tasa referencial BCV
+    const sid = (salarioMensualTotal / 30) * 1.2; // 1.2 incluye alícuota de utilidades/vacaciones
+
+    const totalPrestaciones = diasDerecho * sid;
+
+    // Mostrar resultados
+    document.getElementById('resultado').style.display = 'block';
+    document.getElementById('detalle').innerHTML = `
+        Antigüedad: ${meses} meses.<br>
+        Días de prestación: ${diasDerecho} días.<br>
+        Salario Integral Diario: $${sid.toFixed(2)}<br><br>
+        <strong>Monto Estimado: $${totalPrestaciones.toFixed(2)}</strong>
+    `;
+}
+</script>
+
+</body>
+</html>
