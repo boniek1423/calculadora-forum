@@ -154,8 +154,23 @@ function calcular() {
     const mBonoFrac = (mesesVacFrac * (dVac / 12)) * dBase;
 
     // 4. Feriados y Domingos (Calculados a salario base)
-    const mFeriados = numFeriados * dBase;
-    const mDomingos = numDomingos * dBase;
+  /*  const mFeriados = numFeriados * dBase;
+    const mDomingos = numDomingos * dBase;*/
+    // ... (dentro de la función calcular)
+
+// 4. Feriados y Domingos (Calculados a salario base según Art. 119 y 120)
+// Nota: Se usa dBase porque el recargo de ley es sobre el salario normal
+const mFeriados = numFeriados * dBase;
+const mDomingos = numDomingos * dBase;
+
+// 5. Indemnización (Si aplica)
+const mIndem = (motivo === 'despido') ? mPrest : 0;
+
+// SUMA TOTAL: Asegúrate de incluir mDomingos aquí
+const bruto = mPrest + mUtilFrac + mVacFrac + mBonoFrac + mIndem + mFeriados + mDomingos;
+const neto = bruto - deduc;
+
+// ... (el resto del objeto res se mantiene igual)
 
     // 5. Indemnización
     const mIndem = (motivo === 'despido') ? mPrest : 0;
