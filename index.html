@@ -124,10 +124,27 @@ function calcular() {
     const sIntegral = dBase + (dBase * dUtil / 360) + (dBase * dVac / 360);
 
     // Tiempo de servicio
-    let años = fEgr.getFullYear() - fIng.getFullYear();
+    /*let años = fEgr.getFullYear() - fIng.getFullYear();
     let meses = fEgr.getMonth() - fIng.getMonth();
     if (fEgr.getDate() < fIng.getDate()) meses--;
-    if (meses < 0) { años--; meses += 12; }
+    if (meses < 0) { años--; meses += 12; }*/
+    // --- SUSTITUYE TU BLOQUE DE "Tiempo de servicio" POR ESTE ---
+
+// Calculamos la diferencia total en meses
+let totalMeses = (fEgr.getFullYear() - fIng.getFullYear()) * 12 + (fEgr.getMonth() - fIng.getMonth());
+
+// Si el día de egreso es menor al de ingreso, restamos un mes solo si queremos 
+// exactitud técnica. Si prefieres redondear a favor, puedes omitir el if.
+if (fEgr.getDate() < fIng.getDate()) {
+    // totalMeses--; // Descomenta esta línea si quieres que sea estricto (2 años, 4 meses)
+}
+
+let años = Math.floor(totalMeses / 12);
+let meses = totalMeses % 12;
+
+// --- FIN DEL BLOQUE ---
+
+    
 
     // 1. Prestaciones (Garantía Art. 142)
     const mPrest = ((años * 60) + (meses * 5) + (años >= 1 ? Math.min(años * 2, 30) : 0)) * sIntegral;
